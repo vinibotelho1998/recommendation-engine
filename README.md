@@ -1,34 +1,37 @@
-![Recommendation Engine — Sistemas de recomendação](docs/assets/banner.svg)
+![Recommendation Engine: ranking de filmes](docs/assets/banner.svg)
 
 # Recommendation Engine
 
-Recomenda filmes ainda não avaliados a partir do histórico de preferências. A implementação combina similaridade item-item esparsa, fallback de popularidade e feedback persistente, com avaliação de ranking reproduzível.
+Uma API de recomendações que parte do histórico de avaliações para encontrar filmes ainda não vistos. Ela combina similaridade entre itens, um fallback para usuários sem histórico e feedback persistente.
 
-**Competência principal:** Sistemas de recomendação.
+**Histórico positivo → filmes semelhantes → exclusão dos já avaliados → ranking**
 
-| IA implementada | Backend | Dados da demonstração | Verificação local |
-| --- | --- | --- | --- |
-| Filtragem colaborativa item-item | FastAPI · SQLite · idempotência | 120 usuários e 72 filmes sintéticos | 47 testes aprovados |
+A demonstração usa **120 usuários e 72 filmes fictícios**. Python, FastAPI, SciPy e SQLite compõem o pipeline.
 
-[Demonstração e captura](docs/PRESENTATION.md) · [Resultado registrado](reports/demo-evaluation.json) · [Plano de commits](COMMITS.txt)
+## Como a recomendação funciona
 
-## Demonstração
+1. Avaliações a partir de quatro estrelas viram sinais positivos binários.
+2. A matriz esparsa relaciona filmes a usuários. A similaridade de cosseno encontra vizinhos de cada filme.
+3. Na consulta, os vizinhos dos filmes positivos do usuário acumulam pontos. Todos os filmes já avaliados são excluídos, inclusive avaliações negativas.
+4. Se faltarem candidatos, a lista é completada pela quantidade de usuários que avaliaram bem cada filme, com desempate estável pelo ID.
 
-Painel de demonstração com respostas reais da API. A apresentação organiza requisições, resultados e verificações da execução registrada.
+Um usuário novo recebe popularidade com `cold_start=true`. Novo feedback altera o perfil usado na consulta, mas **não recalcula** as similaridades globais nem a popularidade do artefato. Para incorporar esse sinal ao modelo global, é preciso exportar/incorporar o histórico de feedback ao dataset e treinar uma nova versão. Não há retreinamento automático escondido no endpoint.
 
-| Captura no navegador | Demonstração animada |
-| :---: | :---: |
-| ![Painel de demonstração do Recommendation Engine](docs/assets/screenshot.jpg) | ![Demonstração do fluxo do Recommendation Engine](docs/assets/demo.gif) |
+O treinamento retém apenas os vizinhos mais próximos de cada item; não persiste uma matriz densa de similaridade do catálogo inteiro. A busca exata ainda tem custo alto conforme o catálogo cresce. Catálogos muito maiores pediriam outra estratégia de candidatos ou busca aproximada.
 
-[Abrir painel local em HTML](docs/demo/index.html) · [Consultar requests, respostas e timestamps](docs/demo/run.json) · [Ver o contrato no Swagger](docs/assets/api-docs.jpg)
+## Do histórico ao ranking
 
-Os dados e os limites do cenário estão descritos no [guia da demonstração](docs/PRESENTATION.md). O painel foi preparado para apresentar o backend e suas evidências.
+Na sequência abaixo, a API consulta recomendações, recebe uma avaliação e atualiza o perfil usado na próxima consulta. Os filmes e usuários são fictícios.
 
-## Arquitetura
+![Recomendações e feedback](docs/assets/demo.gif)
 
-![Fluxo de dados e componentes do Recommendation Engine](docs/assets/architecture.svg)
+[Abrir o painel](docs/demo/index.html) · [Solicitações e respostas](docs/demo/run.json) · [Captura do Swagger](docs/assets/api-docs.jpg)
 
-Os CSVs alimentam treino e avaliação separados; a API combina o artefato com as avaliações recentes do usuário. Veja as [decisões técnicas](docs/architecture.md).
+<details><summary>Ver captura estática</summary>
+
+![Ranking de filmes](docs/assets/screenshot.jpg)
+
+</details>
 
 ## Rodar localmente
 
@@ -77,17 +80,6 @@ Em um banco de feedback novo, o usuário `999` começa sem histórico. Depois do
 
 Cada item informa `source=item_similarity` ou `source=popularity`. O `score` é uma heurística de ranking, não uma probabilidade; os dois tipos de score têm significados diferentes. Os itens de popularidade completam a lista depois dos candidatos colaborativos.
 
-## Como a recomendação funciona
-
-1. Avaliações a partir de quatro estrelas viram sinais positivos binários.
-2. A matriz esparsa relaciona filmes a usuários. A similaridade de cosseno encontra vizinhos de cada filme.
-3. Na consulta, os vizinhos dos filmes positivos do usuário acumulam pontos. Todos os filmes já avaliados são excluídos, inclusive avaliações negativas.
-4. Se faltarem candidatos, a lista é completada pela quantidade de usuários que avaliaram bem cada filme, com desempate estável pelo ID.
-
-Um usuário novo recebe popularidade com `cold_start=true`. Novo feedback altera o perfil usado na consulta, mas **não recalcula** as similaridades globais nem a popularidade do artefato. Para incorporar esse sinal ao modelo global, é preciso exportar/incorporar o histórico de feedback ao dataset e treinar uma nova versão. Não há retreinamento automático escondido no endpoint.
-
-O treinamento retém apenas os vizinhos mais próximos de cada item; não persiste uma matriz densa de similaridade do catálogo inteiro. A busca exata ainda tem custo alto conforme o catálogo cresce. Catálogos muito maiores pediriam outra estratégia de candidatos ou busca aproximada.
-
 ## Avaliação e resultados
 
 ![Comparação registrada do Recommendation Engine](docs/assets/metrics.svg)
@@ -129,6 +121,12 @@ $env:RECSYS_MODEL_PATH = 'var/movielens.joblib'
 
 O diretório `data/movielens/` fica fora do Git. O download depende da disponibilidade da fonte e não sobrescreve um destino preenchido. A base `latest-small` pode mudar; guarde a proveniência junto com os resultados. Consulte [`docs/data-provenance.md`](docs/data-provenance.md) para importar seus próprios dados.
 
+## Componentes
+
+![Fluxo de dados e componentes do Recommendation Engine](docs/assets/architecture.svg)
+
+Os CSVs alimentam treino e avaliação separados; a API combina o artefato com as avaliações recentes do usuário. Veja as [decisões técnicas](docs/architecture.md).
+
 ## Testes e container
 
 ```powershell
@@ -142,10 +140,8 @@ Os testes cobrem exclusão de itens vistos, cold start, feedback que substitui a
 
 `RECSYS_MODEL_PATH` e `RECSYS_DB_PATH` alteram os caminhos padrão. A aplicação lê variáveis de ambiente do processo; o arquivo `.env.example` é apenas referência. Os artefatos `joblib` devem ser produzidos pelo próprio pipeline, pois o formato permite execução de código na desserialização.
 
-## Decisões e próximos passos
+## Limites de uso
 
 SQLite torna persistência e idempotência fáceis de verificar sem serviços adicionais. O serviço roda com IDs de usuário de demonstração e não implementa autenticação, autorização ou consentimento para dados pessoais. A proposta é uma API local reproduzível. Um uso público precisaria desses controles, além de política de retenção, limitação de requisições e observabilidade operacional.
 
 Os próximos experimentos úteis seriam avaliar com MovieLens, comparar normalização de popularidade, medir desempenho por usuários com pouco histórico e fazer um corte temporal global. Filtros de conteúdo ajudariam no cold start de novos filmes.
-
-O [plano de commits](COMMITS.txt) divide o projeto em etapas para revisão e publicação.
