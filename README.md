@@ -4,6 +4,8 @@
 
 Uma API de recomendações que parte do histórico de avaliações para encontrar filmes ainda não vistos. Ela combina similaridade entre itens, um fallback para usuários sem histórico e feedback persistente.
 
+A técnica é a **filtragem colaborativa item-item**: o modelo calcula a similaridade entre filmes a partir dos padrões de avaliação e usa essas relações para montar o ranking.
+
 **Histórico positivo → filmes semelhantes → exclusão dos já avaliados → ranking**
 
 A demonstração usa **120 usuários e 72 filmes fictícios**. Python, FastAPI, SciPy e SQLite compõem o pipeline.
