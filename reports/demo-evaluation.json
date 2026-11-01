@@ -1,0 +1,58 @@
+{
+  "created_at": "2026-10-27T02:18:39.801762+00:00",
+  "data_sha256": "749bdaad98a5f3837c9ecc105791fe8f75a9a8209da6579fe68bea65ef454481",
+  "protocol": "leave-last-positive-out; same-user events at/after cutoff excluded",
+  "global_time_caveat": "Other users may have later events; not a global temporal simulation.",
+  "train_ratings": 1277,
+  "test_ratings": 120,
+  "positive_threshold": 4.0,
+  "neighbors": 30,
+  "results": [
+    {
+      "method": "item_similarity",
+      "k": 5,
+      "users_evaluated": 120,
+      "precision_at_k": 0.2,
+      "recall_at_k": 1.0,
+      "mrr_at_k": 0.55,
+      "catalog_coverage": 1.0,
+      "mean_list_length": 5.0
+    },
+    {
+      "method": "item_similarity",
+      "k": 10,
+      "users_evaluated": 120,
+      "precision_at_k": 0.1,
+      "recall_at_k": 1.0,
+      "mrr_at_k": 0.55,
+      "catalog_coverage": 1.0,
+      "mean_list_length": 10.0
+    },
+    {
+      "method": "popularity",
+      "k": 5,
+      "users_evaluated": 120,
+      "precision_at_k": 0.003333,
+      "recall_at_k": 0.016667,
+      "mrr_at_k": 0.008333,
+      "catalog_coverage": 0.125,
+      "mean_list_length": 5.0
+    },
+    {
+      "method": "popularity",
+      "k": 10,
+      "users_evaluated": 120,
+      "precision_at_k": 0.0075,
+      "recall_at_k": 0.075,
+      "mrr_at_k": 0.016746,
+      "catalog_coverage": 0.208333,
+      "mean_list_length": 10.0
+    }
+  ],
+  "definitions": {
+    "precision_at_k": "hits / (users * k), with at most one hit per user",
+    "recall_at_k": "hits / eligible users; equal to hit rate with one held-out item",
+    "mrr_at_k": "mean reciprocal rank of held-out item, zero when absent",
+    "catalog_coverage": "unique recommended movies / total catalog movies"
+  }
+}

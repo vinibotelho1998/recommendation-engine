@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "project": "03-recommendation-engine",
+  "run_id": "fb64fcd462a34679bd6021d3d06c5e38",
+  "kind": "synthetic_fixture",
+  "started_at": "2026-10-27T12:53:34.090302+00:00",
+  "status": "passed",
+  "base_url": "http://127.0.0.1:8003",
+  "data_provenance": "Usuário novo artificial e feedback de demonstração; nenhum nome ou dado pessoal é enviado.",
+  "timing_note": "Observed wall time for one execution; not a performance benchmark.",
+  "credentials_saved": false,
+  "steps": [
+    {
+      "id": "cold_start",
+      "title": "Sugestões para um usuário novo",
+      "timestamp": "2026-10-27T12:53:34.090302+00:00",
+      "endpoint": "http://127.0.0.1:8003/recommendations/1080731082338?k=3",
+      "method": "GET",
+      "request": null,
+      "status_code": 200,
+      "response": {
+        "user_id": 1080731082338,
+        "cold_start": true,
+        "model_version": "itemknn-749bdaad98a5-n30-p4",
+        "recommendations": [
+          {
+            "movie_id": 72,
+            "title": "Documentario — filme ficticio 12",
+            "score": 0.15,
+            "source": "popularity",
+            "explanation": "Popular entre os usuarios do conjunto de treinamento"
+          },
+          {
+            "movie_id": 12,
+            "title": "Ficcao — filme ficticio 12",
+            "score": 0.15,
+            "source": "popularity",
+            "explanation": "Popular entre os usuarios do conjunto de treinamento"
+          },
+          {
+            "movie_id": 42,
+            "title": "Animacao — filme ficticio 06",
+            "score": 0.15,
+            "source": "popularity",
+            "explanation": "Popular entre os usuarios do conjunto de treinamento"
+          }
+        ]
+      },
+      "duration_ms": 4.145,
+      "status": "passed",
+      "checks": [
+        {
+          "name": "HTTP 200",
+          "passed": true
+        },
+        {
+          "name": "Fallback inicial por popularidade",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "feedback",
+      "title": "Feedback positivo",
+      "timestamp": "2026-10-27T12:53:34.094525+00:00",
+      "endpoint": "http://127.0.0.1:8003/feedback",
+      "method": "POST",
+      "request": {
+        "user_id": 1080731082338,
+        "movie_id": 72,
+        "rating": 5.0
+      },
+      "status_code": 201,
+      "response": {
+        "id": 3,
+        "user_id": 1080731082338,
+        "movie_id": 72,
+        "rating": 5.0,
+        "created_at": "2026-10-27T12:53:34.111847+00:00",
+        "created": true
+      },
+      "duration_ms": 27.663,
+      "status": "passed",
+      "checks": [
+        {
+          "name": "HTTP 201",
+          "passed": true
+        },
+        {
+          "name": "Um evento criado",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "idempotent_retry",
+      "title": "Repetição sem duplicação",
+      "timestamp": "2026-10-27T12:53:34.121924+00:00",
+      "endpoint": "http://127.0.0.1:8003/feedback",
+      "method": "POST",
+      "request": {
+        "user_id": 1080731082338,
+        "movie_id": 72,
+        "rating": 5.0
+      },
+      "status_code": 200,
+      "response": {
+        "id": 3,
+        "user_id": 1080731082338,
+        "movie_id": 72,
+        "rating": 5.0,
+        "created_at": "2026-10-27T12:53:34.111847+00:00",
+        "created": false
+      },
+      "duration_ms": 19.625,
+      "status": "passed",
+      "checks": [
+        {
+          "name": "HTTP 200",
+          "passed": true
+        },
+        {
+          "name": "Mesmo evento, sem nova gravação",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "personalized",
+      "title": "Ranking após o feedback",
+      "timestamp": "2026-10-27T12:53:34.141678+00:00",
+      "endpoint": "http://127.0.0.1:8003/recommendations/1080731082338?k=3",
+      "method": "GET",
+      "request": null,
+      "status_code": 200,
+      "response": {
+        "user_id": 1080731082338,
+        "cold_start": false,
+        "model_version": "itemknn-749bdaad98a5-n30-p4",
+        "recommendations": [
+          {
+            "movie_id": 69,
+            "title": "Documentario — filme ficticio 09",
+            "score": 0.888889,
+            "source": "item_similarity",
+            "explanation": "Similar a um filme que voce avaliou bem: Documentario — filme ficticio 12"
+          },
+          {
+            "movie_id": 61,
+            "title": "Documentario — filme ficticio 01",
+            "score": 0.857493,
+            "source": "item_similarity",
+            "explanation": "Similar a um filme que voce avaliou bem: Documentario — filme ficticio 12"
+          },
+          {
+            "movie_id": 66,
+            "title": "Documentario — filme ficticio 06",
+            "score": 0.857493,
+            "source": "item_similarity",
+            "explanation": "Similar a um filme que voce avaliou bem: Documentario — filme ficticio 12"
+          }
+        ]
+      },
+      "duration_ms": 15.327,
+      "status": "passed",
+      "checks": [
+        {
+          "name": "HTTP 200",
+          "passed": true
+        },
+        {
+          "name": "Personalização habilitada e filme visto removido",
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "synthetic_user_id": 1080731082338,
+    "initial_cold_start": true,
+    "cold_start_after_feedback": false,
+    "feedback_created": true,
+    "retry_created": false,
+    "model_version": "itemknn-749bdaad98a5-n30-p4",
+    "rated_movie_id": 72,
+    "recommendations": [
+      {
+        "movie_id": 69,
+        "title": "Documentario — filme ficticio 09",
+        "score": 0.888889,
+        "source": "item_similarity",
+        "explanation": "Similar a um filme que voce avaliou bem: Documentario — filme ficticio 12"
+      },
+      {
+        "movie_id": 61,
+        "title": "Documentario — filme ficticio 01",
+        "score": 0.857493,
+        "source": "item_similarity",
+        "explanation": "Similar a um filme que voce avaliou bem: Documentario — filme ficticio 12"
+      },
+      {
+        "movie_id": 66,
+        "title": "Documentario — filme ficticio 06",
+        "score": 0.857493,
+        "source": "item_similarity",
+        "explanation": "Similar a um filme que voce avaliou bem: Documentario — filme ficticio 12"
+      }
+    ]
+  },
+  "supporting_evidence": [
+    {
+      "kind": "recorded_offline_evaluation",
+      "path": "reports/demo-evaluation.json",
+      "sha256": "13a73cf4701edd854b23f26c2d0c28c441df5418fc0fcc039784f73570e093b3",
+      "read_at": "2026-10-27T12:53:34.157097+00:00",
+      "note": "Existing report read from disk; evaluation was not rerun by this capture script.",
+      "report": {
+        "created_at": "2026-10-27T02:18:39.801762+00:00",
+        "data_sha256": "749bdaad98a5f3837c9ecc105791fe8f75a9a8209da6579fe68bea65ef454481",
+        "protocol": "leave-last-positive-out; same-user events at/after cutoff excluded",
+        "global_time_caveat": "Other users may have later events; not a global temporal simulation.",
+        "train_ratings": 1277,
+        "test_ratings": 120,
+        "positive_threshold": 4.0,
+        "neighbors": 30,
+        "results": [
+          {
+            "method": "item_similarity",
+            "k": 5,
+            "users_evaluated": 120,
+            "precision_at_k": 0.2,
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.55,
+            "catalog_coverage": 1.0,
+            "mean_list_length": 5.0
+          },
+          {
+            "method": "item_similarity",
+            "k": 10,
+            "users_evaluated": 120,
+            "precision_at_k": 0.1,
+            "recall_at_k": 1.0,
+            "mrr_at_k": 0.55,
+            "catalog_coverage": 1.0,
+            "mean_list_length": 10.0
+          },
+          {
+            "method": "popularity",
+            "k": 5,
+            "users_evaluated": 120,
+            "precision_at_k": 0.003333,
+            "recall_at_k": 0.016667,
+            "mrr_at_k": 0.008333,
+            "catalog_coverage": 0.125,
+            "mean_list_length": 5.0
+          },
+          {
+            "method": "popularity",
+            "k": 10,
+            "users_evaluated": 120,
+            "precision_at_k": 0.0075,
+            "recall_at_k": 0.075,
+            "mrr_at_k": 0.016746,
+            "catalog_coverage": 0.208333,
+            "mean_list_length": 10.0
+          }
+        ],
+        "definitions": {
+          "precision_at_k": "hits / (users * k), with at most one hit per user",
+          "recall_at_k": "hits / eligible users; equal to hit rate with one held-out item",
+          "mrr_at_k": "mean reciprocal rank of held-out item, zero when absent",
+          "catalog_coverage": "unique recommended movies / total catalog movies"
+        }
+      }
+    }
+  ],
+  "finished_at": "2026-10-27T12:53:34.157097+00:00"
+}

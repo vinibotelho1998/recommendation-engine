@@ -1,0 +1,51 @@
+Plano de commits — Recommendation Engine
+
+A sequencia abaixo organiza as mudancas do projeto em commits revisaveis.
+
+Se o diretorio ainda nao tiver .git:
+  git init -b main
+
+1. chore: configura projeto de recomendações e dados sintéticos
+   Objetivo: configurar o pacote e registrar dados reproduziveis com origem clara.
+   git add .gitignore .dockerignore pyproject.toml requirements.lock src/recommendation_engine/__init__.py data/demo
+   git diff --cached
+   git commit -m "chore: configura projeto de recomendações e dados sintéticos"
+
+2. feat: treina recomendações por similaridade e avalia popularidade
+   Objetivo: adicionar contrato dos CSVs, modelo esparso, exclusao de vistos,
+   cold start e avaliacao leave-last-positive-out sem eventos posteriores do usuario.
+   git add src/recommendation_engine/data.py src/recommendation_engine/model.py src/recommendation_engine/evaluation.py tests/conftest.py tests/test_data.py tests/test_model.py
+   git diff --cached
+   git commit -m "feat: treina recomendações por similaridade e avalia popularidade"
+
+3. feat: disponibiliza recomendações e feedback persistente idempotente
+   Objetivo: expor a API e persistir o feedback em transacoes SQLite.
+   Inclui testes de retries concorrentes, conflito de chave e exclusao imediata de vistos.
+   git add src/recommendation_engine/store.py src/recommendation_engine/api.py tests/test_store.py tests/test_api.py
+   git diff --cached
+   git commit -m "feat: disponibiliza recomendações e feedback persistente idempotente"
+
+4. feat: adiciona interface de comandos e importação opcional do MovieLens
+   Objetivo: tornar treinamento/avaliacao/consulta acessiveis por comando e
+   importar dados reais somente apos aceite dos termos da fonte.
+   git add src/recommendation_engine/cli.py src/recommendation_engine/download.py src/recommendation_engine/__main__.py tests/test_cli.py tests/test_download.py
+   git diff --cached
+   git commit -m "feat: adiciona interface de comandos e importação opcional do MovieLens"
+
+5. docs: documenta limites da avaliação e execução em contêiner
+   Inclui capa, diagrama, capturas, GIF, painel HTML e metadados da execucao real.
+   Objetivo: permitir que outra pessoa rode, avalie e compreenda os resultados.
+   git add README.md docs/model-card.md docs/data-provenance.md docs/architecture.md docs/PRESENTATION.md docs/assets docs/demo reports .env.example Dockerfile .github/workflows/ci.yml COMMITS.txt LICENSE
+   git diff --cached
+   git commit -m "docs: documenta limites da avaliação e execução em contêiner"
+
+Validacao antes de publicar:
+  .\.venv\Scripts\python.exe -m pytest -q
+  .\.venv\Scripts\python.exe -m ruff check src tests
+  .\.venv\Scripts\python.exe -m recommendation_engine demo
+  git status
+
+Os arquivos var/ e data/movielens/ devem continuar ignorados.
+Resultados com MovieLens devem ser obtidos por uma execucao do pipeline nessa base.
+O relatorio incluido usa uma fixture sintetica propositalmente facil.
+Se voce mudar a arquitetura, adapte a divisao dos commits ao que foi implementado.
