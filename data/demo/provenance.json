@@ -1,0 +1,9 @@
+{
+  "synthetic": true,
+  "seed": 42,
+  "users": 120,
+  "movies": 72,
+  "generator": "recommendation_engine.data.generate_demo",
+  "purpose": "Exercise the pipeline; taste groups are intentionally easy to recover.",
+  "license": "CC0-1.0 for this generated fixture only"
+}
